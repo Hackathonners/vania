@@ -14,10 +14,8 @@ def main():
     ]
 
     # Run solver
-    start_time = time.time()
     distributor = FairDistributor(users, tasks, preferences)
     output = distributor.distribute(output='problem.lp')
-    elapsed_time = time.time() - start_time
 
     # Output
     print(output)
