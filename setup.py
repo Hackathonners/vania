@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
+import setuptools.command.build_py
+import subprocess
+
+
+class GenDocsCommand(setuptools.command.build_py.build_py):
+
+    """Command to generate docs."""
+
+    def run(self):
+        subprocess.Popen(
+            ['pdoc', '--html', 'vania/fair_distributor.py', '--html-dir=docs/', '--overwrite'])
+        setuptools.command.build_py.build_py.run(self)
 
 try:
     long_description = open("README.md").read()
@@ -15,6 +27,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'pulp',
+        'pdoc'
     ],
     package_dir={'': '.'},
     long_description=long_description,
@@ -24,4 +37,7 @@ setup(
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
+    cmdclass={
+        'gendocs': GenDocsCommand
+    },
 )
