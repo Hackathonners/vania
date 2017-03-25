@@ -89,9 +89,9 @@ class FairDistributor:
                 positive_effort_diff = LpAffineExpression([(users_tasks_variables[
                                                           'x' + str(u) + str(t)], positive_factor * self._weights[u][t]) for (t, task) in enumerate(self._targets)]) - effort_expression
 
-                problem += negative_effort_diff <= effort_diff_aux_variable, 'abs negative effort diff ' +
+                problem += negative_effort_diff <= effort_diff_aux_variable, 'abs negative effort diff ' + \
                     str(u)
-                problem += positive_effort_diff <= effort_diff_aux_variable, 'abs positive effort diff ' +
+                problem += positive_effort_diff <= effort_diff_aux_variable, 'abs positive effort diff ' + \
                     str(u)
 
         # Constraints
