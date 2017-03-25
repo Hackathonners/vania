@@ -42,77 +42,98 @@ class FairDistributor:
     def _validate(self):
         if len(self._weights) != len(self._targets):
             raise ValueError(
-                "The number of lines on the weights sould match the target's length")
-        # All values sould be positive
+                "The number of lines on the weights should match the targets' length")
+
+        # All values should be positive
         s = list(
             dropwhile(lambda x: len(x) == len(self._objects), self._weights))
         if len(s) != 0:
             raise ValueError(
-                "The number of columns on the weights sould match the things's length")
+                "The number of columns on the weights should match the objects' length")
         for lines in self._weights:
             for i in lines:
                 if i < 0:
                     raise ValueError(
-                        "All values on the weights sould be positive")
+                        "All values on the weights should be positive")
 
-    def distribute(self, fairness=True):
+    def distribute(self, fairness=True, output=None):
         """
         This method is responsible for actually solving the linear programming problem.
         It uses the data in the instance variables.
         The optional parameter **fairness** indicates if the solution should minimize individual effort. By default the solution will enforce this condition.
         """
+
         # State problem
         problem = LpProblem("Fair Distribution Problem", LpMinimize)
 
         # Prepare variables
-        users_tasks_variables = {'x'+str(u)+str(t): LpVariable('x' + str(u) + str(t), lowBound=0, cat='Binary')
-                                 for (u, user) in enumerate(self._objects) for (t, task) in enumerate(self._targets)}
+        targets_objects = {}
+        for (t, target) in enumerate(self._targets):
+            for (o, object) in enumerate(self._objects):
+                variable = LpVariable(
+                    'x' + str(t) + str(o), lowBound=0, cat='Binary')
+                position = {'target': t, 'object': o}
+                targets_objects['x' + str(t) + str(o)] = (variable, position)
 
         # Generate linear expression for self._weights (Summation #1)
-        preferences_variables = [(users_tasks_variables['x' + str(u) + str(t)], self._weights[u][t])
-                                 for (u, user) in enumerate(self._objects) for (t, task) in enumerate(self._targets)]
-        effort_expression = LpAffineExpression(preferences_variables)
+        weights = [(variable, self._weights[weight_position['target']][weight_position['object']])
+                   for (variable, weight_position) in targets_objects.values()]
+        weight_expression = LpAffineExpression(weights)
 
         # Generate linear expression for effort distribution (Summation #2)
-        effort_diff_vars = []
+        weight_diff_vars = []
         if fairness:
-            total_users = len(self._objects)
-            for (u, user) in enumerate(self._objects):
-                effort_diff_aux_variable = LpVariable(
-                    'effort_diff_'+str(u), lowBound=0)
-                effort_diff_vars.append(effort_diff_aux_variable)
+            total_targets = len(self._targets)
+            for (t, target) in enumerate(self._targets):
+                weight_diff_aux_variable = LpVariable(
+                    'weight_diff_'+str(t), lowBound=0)
+                weight_diff_vars.append(weight_diff_aux_variable)
 
-                negative_factor = -1 * total_users
-                negative_effort_diff = LpAffineExpression([(users_tasks_variables[
-                                                          'x' + str(u) + str(t)], negative_factor * self._weights[u][t]) for (t, task) in enumerate(self._targets)]) + effort_expression
-                positive_factor = 1 * total_users
-                positive_effort_diff = LpAffineExpression([(users_tasks_variables[
-                                                          'x' + str(u) + str(t)], positive_factor * self._weights[u][t]) for (t, task) in enumerate(self._targets)]) - effort_expression
+                negative_factor = -1 * total_targets
+                negative_effort_diff = LpAffineExpression(
+                    [(targets_objects['x' + str(t) + str(o)][0], negative_factor *
+                      self._weights[t][o]) for (o, object) in enumerate(self._objects)]
+                ) + weight_expression
+                positive_factor = 1 * total_targets
 
-                problem += negative_effort_diff <= effort_diff_aux_variable, 'abs negative effort diff ' + \
-                    str(u)
-                problem += positive_effort_diff <= effort_diff_aux_variable, 'abs positive effort diff ' + \
-                    str(u)
+                positive_effort_diff = LpAffineExpression(
+                    [(targets_objects['x' + str(t) + str(o)][0], negative_factor *
+                      self._weights[t][o]) for (o, object) in enumerate(self._objects)]
+                ) - weight_expression
 
-        # Constraints
-        # Each task must be done
-        task_constraints = [lpSum([users_tasks_variables['x' + str(u) + str(t)] for (u, self._objects)
-                                   in enumerate(self._objects)]) for (t, task) in enumerate(self._targets)]
-        for (tc, task_constraint) in enumerate(task_constraints):
-            problem += task_constraint == 1, 'Task ' + \
-                str(tc) + ' must be done'
+                problem += negative_effort_diff <= weight_diff_aux_variable, 'abs negative effort diff ' + \
+                    str(t)
+                problem += positive_effort_diff <= weight_diff_aux_variable, 'abs positive effort diff ' + \
+                    str(t)
+
+        # Constraints - Each task must be done
+        objects_constraints = [lpSum([targets_objects['x' + str(t) + str(o)][0] for (t, target)
+                                      in enumerate(self._targets)]) for (o, object) in enumerate(self._objects)]
+        for (oc, object_constraint) in enumerate(objects_constraints):
+            problem += object_constraint == 1, 'Task ' + \
+                str(oc) + ' must be done'
 
         # Set objective function
-        problem += effort_expression + \
-            lpSum(effort_diff_vars), "obj"
+        problem += weight_expression + \
+            lpSum(weight_diff_vars), "obj"
 
-        problem.writeLP('problem.lp')
+        if output:
+            problem.writeLP(output)
+
         problem.solve()
 
-        # Output
-        print("Status:", LpStatus[problem.status])
-        # Print the value of the variables at the optimum
-        for v in problem.variables():
-            print(v.name, "=", v.varValue)
-        # Print the value of the objective
-        print("objective=", value(problem.objective))
+        # Build output
+        data = {}
+        for v in filter(lambda x: x.varValue > 0, problem.variables()):
+            if v.name not in targets_objects:
+                continue
+            position = targets_objects[v.name][1]
+            target = self._targets[position['target']]
+            object = self._objects[position['object']]
+
+            if target not in data:
+                data[target] = []
+
+            data[target].append(object)
+
+        return data
