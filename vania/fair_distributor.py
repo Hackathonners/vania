@@ -89,17 +89,21 @@ class FairDistributor:
                     'weight_diff_'+str(t), lowBound=0)
                 weight_diff_vars.append(weight_diff_aux_variable)
 
+                negative_effort_diff_weights = []
+                positive_effort_diff_weights = []
                 negative_factor = -1 * total_targets
-                negative_effort_diff = pulp.LpAffineExpression(
-                    [(targets_objects['x' + str(t) + str(o)][0], negative_factor *
-                      self._weights[t][o]) for (o, object) in enumerate(self._objects)]
-                ) + weight_expression
                 positive_factor = 1 * total_targets
+                for (o, object) in enumerate(self._objects):
+                    id = 'x' + str(t) + str(o)
+                    negative_effort_diff_weights.append(
+                        (targets_objects[id][0], negative_factor * self._weights[t][o]))
+                    positive_effort_diff_weights.append(
+                        (targets_objects[id][0], positive_factor * self._weights[t][o]))
 
+                negative_effort_diff = pulp.LpAffineExpression(
+                    negative_effort_diff_weights) + weight_expression
                 positive_effort_diff = pulp.LpAffineExpression(
-                    [(targets_objects['x' + str(t) + str(o)][0], negative_factor *
-                      self._weights[t][o]) for (o, object) in enumerate(self._objects)]
-                ) - weight_expression
+                    positive_effort_diff_weights) - weight_expression
 
                 problem += negative_effort_diff <= weight_diff_aux_variable, 'abs negative effort diff ' + \
                     str(t)
@@ -107,11 +111,12 @@ class FairDistributor:
                     str(t)
 
         # Constraints - Each task must be done
-        objects_constraints = [pulp.lpSum([targets_objects['x' + str(t) + str(o)][0] for (t, target)
-                                           in enumerate(self._targets)]) for (o, object) in enumerate(self._objects)]
-        for (oc, object_constraint) in enumerate(objects_constraints):
-            problem += object_constraint == 1, 'Task ' + \
-                str(oc) + ' must be done'
+        for (o, object) in enumerate(self._objects):
+            constraints = []
+            for (t, target) in enumerate(self._targets):
+                constraints.append(targets_objects['x' + str(t) + str(o)][0])
+            problem += pulp.lpSum(constraints) == 1, 'Task ' + \
+                str(o) + ' must be done'
 
         # Set objective function
         problem += weight_expression + \
