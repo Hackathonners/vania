@@ -16,7 +16,7 @@ setup(
     install_requires=[
         'pulp',
     ],
-    package_dir={'': 'src'},
+    package_dir={'': '.'},
     long_description=long_description,
     classifiers=[
         "Programming Language :: Python",
