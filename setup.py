@@ -24,6 +24,7 @@ setup(
     description="A module to fairly distribute objects among targets considering weights.",
     license="MIT",
     author="Hackathonners",
+    author_email="contact@hackathonners.org",
     packages=find_packages(),
     install_requires=[
         'pulp',
