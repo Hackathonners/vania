@@ -1,5 +1,5 @@
 from unittest import TestCase
-from vania.FairDistributor import FairDistributor
+from vania.fair_distributor import FairDistributor
 
 
 class TestFairDistributor(TestCase):

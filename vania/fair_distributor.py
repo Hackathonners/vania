@@ -4,6 +4,7 @@ By means of a linear programming solver, the module takes into consideration the
 and distributes them in the **fairest way possible**.
 """
 from pulp import *
+from itertools import dropwhile
 
 
 class FairDistributor:
@@ -32,7 +33,27 @@ class FairDistributor:
         """
         This method validates the current data.
         """
-        return True
+        try:
+            self._validate()
+            return True
+        except ValueError:
+            return False
+
+    def _validate(self):
+        if len(self._weights) != len(self._targets):
+            raise ValueError(
+                "The number of lines on the weights sould match the target's length")
+        # All values sould be positive
+        s = list(
+            dropwhile(lambda x: len(x) == len(self._objects), self._weights))
+        if len(s) != 0:
+            raise ValueError(
+                "The number of columns on the weights sould match the things's length")
+        for lines in self._weights:
+            for i in lines:
+                if i < 0:
+                    raise ValueError(
+                        "All values on the weights sould be positive")
 
     def distribute(self, fairness=True):
         """
@@ -68,9 +89,9 @@ class FairDistributor:
                 positive_effort_diff = LpAffineExpression([(users_tasks_variables[
                                                           'x' + str(u) + str(t)], positive_factor * self._weights[u][t]) for (t, task) in enumerate(self._targets)]) - effort_expression
 
-                problem += negative_effort_diff <= effort_diff_aux_variable, 'abs negative effort diff ' + \
+                problem += negative_effort_diff <= effort_diff_aux_variable, 'abs negative effort diff ' +
                     str(u)
-                problem += positive_effort_diff <= effort_diff_aux_variable, 'abs positive effort diff ' + \
+                problem += positive_effort_diff <= effort_diff_aux_variable, 'abs positive effort diff ' +
                     str(u)
 
         # Constraints
