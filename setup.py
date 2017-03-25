@@ -10,7 +10,7 @@ class GenDocsCommand(setuptools.command.build_py.build_py):
 
     def run(self):
         subprocess.Popen(
-            ['pdoc', '--html', 'vania/fair_distributor.py', '--html-dir=docs/', '--overwrite'])
+            ['pdoc', '--html', 'vania/', '--html-dir=docs', '--overwrite'])
         setuptools.command.build_py.build_py.run(self)
 
 try:
