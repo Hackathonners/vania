@@ -13,7 +13,9 @@ setup(
     license="MIT",
     author="Hackathonners",
     packages=find_packages(),
-    install_requires=[],
+    install_requires=[
+        'pulp',
+    ],
     package_dir={'': 'src'},
     long_description=long_description,
     classifiers=[
