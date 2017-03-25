@@ -3,7 +3,7 @@ This module allows fair distribution of any number of **objects** through a grou
 By means of a linear programming solver, the module takes into consideration the **weights**/self._weights of the **targets** relative to the **objects**.
 and distributes them in the **fairest way possible**.
 """
-from pulp import *
+from pulp import pulp
 from itertools import dropwhile
 
 
@@ -64,13 +64,13 @@ class FairDistributor:
         """
 
         # State problem
-        problem = LpProblem("Fair Distribution Problem", LpMinimize)
+        problem = pulp.LpProblem("Fair Distribution Problem", pulp.LpMinimize)
 
         # Prepare variables
         targets_objects = {}
         for (t, target) in enumerate(self._targets):
             for (o, object) in enumerate(self._objects):
-                variable = LpVariable(
+                variable = pulp.LpVariable(
                     'x' + str(t) + str(o), lowBound=0, cat='Binary')
                 position = {'target': t, 'object': o}
                 targets_objects['x' + str(t) + str(o)] = (variable, position)
@@ -78,25 +78,25 @@ class FairDistributor:
         # Generate linear expression for self._weights (Summation #1)
         weights = [(variable, self._weights[weight_position['target']][weight_position['object']])
                    for (variable, weight_position) in targets_objects.values()]
-        weight_expression = LpAffineExpression(weights)
+        weight_expression = pulp.LpAffineExpression(weights)
 
         # Generate linear expression for effort distribution (Summation #2)
         weight_diff_vars = []
         if fairness:
             total_targets = len(self._targets)
             for (t, target) in enumerate(self._targets):
-                weight_diff_aux_variable = LpVariable(
+                weight_diff_aux_variable = pulp.LpVariable(
                     'weight_diff_'+str(t), lowBound=0)
                 weight_diff_vars.append(weight_diff_aux_variable)
 
                 negative_factor = -1 * total_targets
-                negative_effort_diff = LpAffineExpression(
+                negative_effort_diff = pulp.LpAffineExpression(
                     [(targets_objects['x' + str(t) + str(o)][0], negative_factor *
                       self._weights[t][o]) for (o, object) in enumerate(self._objects)]
                 ) + weight_expression
                 positive_factor = 1 * total_targets
 
-                positive_effort_diff = LpAffineExpression(
+                positive_effort_diff = pulp.LpAffineExpression(
                     [(targets_objects['x' + str(t) + str(o)][0], negative_factor *
                       self._weights[t][o]) for (o, object) in enumerate(self._objects)]
                 ) - weight_expression
@@ -107,15 +107,15 @@ class FairDistributor:
                     str(t)
 
         # Constraints - Each task must be done
-        objects_constraints = [lpSum([targets_objects['x' + str(t) + str(o)][0] for (t, target)
-                                      in enumerate(self._targets)]) for (o, object) in enumerate(self._objects)]
+        objects_constraints = [pulp.lpSum([targets_objects['x' + str(t) + str(o)][0] for (t, target)
+                                           in enumerate(self._targets)]) for (o, object) in enumerate(self._objects)]
         for (oc, object_constraint) in enumerate(objects_constraints):
             problem += object_constraint == 1, 'Task ' + \
                 str(oc) + ' must be done'
 
         # Set objective function
         problem += weight_expression + \
-            lpSum(weight_diff_vars), "obj"
+            pulp.lpSum(weight_diff_vars), "obj"
 
         if output:
             problem.writeLP(output)
