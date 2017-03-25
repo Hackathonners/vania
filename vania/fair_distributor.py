@@ -42,19 +42,19 @@ class FairDistributor:
     def _validate(self):
         if len(self._weights) != len(self._targets):
             raise ValueError(
-                "The number of lines on the weights should match the targets' length")
+                "The amount of weight lines should match the amount of targets")
 
         # All values should be positive
         s = list(
             dropwhile(lambda x: len(x) == len(self._objects), self._weights))
         if len(s) != 0:
             raise ValueError(
-                "The number of columns on the weights should match the objects' length")
+                "The amount of weight columns should match the amount of objects")
         for lines in self._weights:
             for i in lines:
                 if i < 0:
                     raise ValueError(
-                        "All values on the weights should be positive")
+                        "All weights must be positive")
 
     def distribute(self, fairness=True, output=None):
         """
