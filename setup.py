@@ -9,7 +9,7 @@ except IOError:
 setup(
     name="vania",
     version="0.1.0",
-    description="A module to fairly distribute tasks considering people preferences.",
+    description="A module to fairly distribute objects among targets considering weights.",
     license="MIT",
     author="Hackathonners",
     packages=find_packages(),
