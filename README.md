@@ -67,7 +67,7 @@ Please tell us if you are unfamiliar with Git or Github and we'll definitely hel
 
 Hackathonners is **_a group of people who build things_**.
 
-You can check us out at https://www.hackathonners.org.
+You can check us out at http://hackathonners.org.
 
 ## License
 
