@@ -94,3 +94,18 @@ class TestFairDistributor(TestCase):
         self.distributor._weights = weights
 
         self.assertFalse(self.distributor.validate())
+
+    def test_validate_exception_raise(self):
+        objects = ['t1', 't2']
+        targets = ['u1', 'u2']
+        weights = [
+            [-1, 2],
+            [3, -4],
+        ]
+
+        self.distributor._objects = objects
+        self.distributor._targets = targets
+        self.distributor._weights = weights
+
+        with self.assertRaises(ValueError):
+            self.distributor.distribute()

@@ -61,7 +61,10 @@ class FairDistributor:
         This method is responsible for actually solving the linear programming problem.
         It uses the data in the instance variables.
         The optional parameter **fairness** indicates if the solution should minimize individual effort. By default the solution will enforce this condition.
+        An error will be raised in case the data has inconsistencies.
         """
+        # Validate the problem variables
+        self._validate()
 
         # State problem
         problem = pulp.LpProblem("Fair Distribution Problem", pulp.LpMinimize)
