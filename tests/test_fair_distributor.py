@@ -142,3 +142,26 @@ class TestFairDistributor(TestCase):
             shutil.rmtree(path + '/tmp')
         if reset:
             os.makedirs(path + '/tmp')
+
+    def test_validate_output(self):
+        targets = ['Team A', 'Team B', 'Team C']
+        objects = ['Task 1', 'Task 2', 'Task 3', 'Task 4']
+        weights = [
+            [1, 2, 3, 2],
+            [3, 1, 4, 2],
+            [3, 4, 1, 1]
+        ]
+
+        self.distributor._objects = objects
+        self.distributor._targets = targets
+        self.distributor._weights = weights
+
+        expected_output = {'Team A': ['Task 1'], 'Team C': ['Task 3', 'Task 4'], 'Team B': ['Task 2']}
+        for key in expected_output:
+            expected_output[key].sort()
+
+        obtained_output = self.distributor.distribute()
+        for key in obtained_output:
+            obtained_output[key].sort()
+
+        self.assertEqual(obtained_output, expected_output)
