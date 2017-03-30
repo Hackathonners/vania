@@ -1,14 +1,20 @@
+import os
+import filecmp
+import shutil
 from unittest import TestCase
 from vania import FairDistributor
+path = os.path.dirname(os.path.realpath(__file__))
 
 
 class TestFairDistributor(TestCase):
 
     def setUp(self):
         self.distributor = FairDistributor()
+        self._resetTmpTestDir()
 
     def tearDown(self):
         self.distributor = None
+        self._cleanTmpTestDir()
 
     def test_constructor(self):
         objects = ['t1', 't2', 't3']
@@ -109,3 +115,30 @@ class TestFairDistributor(TestCase):
 
         with self.assertRaises(ValueError):
             self.distributor.distribute()
+
+    def test_model_output(self):
+        model_file = path+'/resources/model.lp'
+        output_file = path+'/tmp/model.lp'
+        objects = ['user1', 'user2']
+        targets = ['task1', 'task2']
+        weights = [
+            [1, 2],
+            [2, 1],
+        ]
+
+        self.distributor._objects = objects
+        self.distributor._targets = targets
+        self.distributor._weights = weights
+
+        self.distributor.distribute(output=output_file)
+
+        self.assertTrue(filecmp.cmp(model_file, output_file))
+
+    def _resetTmpTestDir(self):
+        self._cleanTmpTestDir(True)
+
+    def _cleanTmpTestDir(self, reset=False):
+        if os.path.exists(path + '/tmp'):
+            shutil.rmtree(path + '/tmp')
+        if reset:
+            os.makedirs(path + '/tmp')
