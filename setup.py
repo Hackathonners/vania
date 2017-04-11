@@ -20,7 +20,7 @@ except IOError:
 
 setup(
     name="vania",
-    version="0.1.1",
+    version="0.2.0",
     description="A module to fairly distribute objects among targets considering weights.",
     license="MIT",
     author="Hackathonners",
