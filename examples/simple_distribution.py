@@ -1,7 +1,4 @@
-import sys
-import time
-from random import shuffle
-from vania.fair_distributor import FairDistributor
+from vania import FairDistributor
 
 
 def main():
