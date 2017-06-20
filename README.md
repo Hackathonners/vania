@@ -83,8 +83,8 @@ And here is the solution!
 # Output
 {
     'Team A': ['Front-end Development'],        # Team A does the Front-end Development
-    'Team C': ['Testing', 'Documentation'],     # Team B does the Testing and Documentation
-    'Team B': ['Front-end Development']}        # Team C does the Front-end Development
+    'Team B': ['Back-end Development'],         # Team B does the Back-end Development
+    'Team C': ['Testing', 'Documentation']      # Team C does the Testing and Documentation
 }
 ```
 
